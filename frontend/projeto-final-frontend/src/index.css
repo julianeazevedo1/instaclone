@@ -1,0 +1,18 @@
+:root {
+  color-scheme: light;
+  color: #000;
+  background: #fff;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: #000;
+}
+
+#root {
+  min-height: 100vh;
+  background: #fff;
+  color: #000;
+}
