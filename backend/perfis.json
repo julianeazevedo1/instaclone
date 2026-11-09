@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "usuario": "juliane",
+    "nome": "Juliane Azevedo",
+    "fotoPerfil": "https://placehold.co/100",
+    "bio": "Fullstack Dev",
+    "localidade": "Fortaleza, Brasil",
+    "posts": 20,
+    "seguidores": 345,
+    "seguindo": 27
+  },
+  {
+    "id": 2,
+    "usuario": "ana",
+    "nome": "Ana Silva doakp",
+    "fotoPerfil": "https://img.magnific.com/fotos-premium/uma-mulher-de-negocios-elegante-e-confiante-a-sorrir_589812-528.jpg?semt=ais_hybrid&w=740&q=80",
+    "bio": "UX/UI Designer",
+    "localidade": "Fortaleza, Brasil",
+    "posts": 20,
+    "seguidores": 120,
+    "seguindo": 80
+  },
+  {
+    "id": 3,
+    "usuario": "joao",
+    "nome": "João Pereira",
+    "fotoPerfil": "https://images.pexels.com/photos/31772575/pexels-photo-31772575.jpeg",
+    "bio": "Product Owner",
+    "localidade": "Fortaleza, Brasil",
+    "posts": 30,
+    "seguidores": 120,
+    "seguindo": 80
+  },
+  {
+    "id": 4,
+    "usuario": "carlos",
+    "nome": "josé Carlos Santos ",
+    "fotoPerfil": "https://images.pexels.com/photos/7681106/pexels-photo-7681106.jpeg",
+    "bio": "Product Manager ",
+    "localidade": "Fortaleza, Brasil",
+    "posts": 50,
+    "seguidores": 120,
+    "seguindo": 80
+  }
+]
