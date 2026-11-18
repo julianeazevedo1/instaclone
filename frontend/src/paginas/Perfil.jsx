@@ -1,21 +1,22 @@
+import { useParams } from 'react-router-dom'
 import Navbar from '../componentes/Navbar'
 import Perfil from '../componentes/Perfil'
 import Feed from '../componentes/Feed'
 
+function PaginaPerfil() {
+  const { id } = useParams()
 
-
-function Instagram() {
   return (
-    <>
-      <Navbar />
-      <Perfil />
-      <Feed/>
-    
-
-
-      
-    </>
+    <div className="container-fluid min-vh-100 px-0" >
+      <div className="row g-0">
+        <Navbar />
+        <main className="col-12 col-lg-9 col-xl-10 perfil-main">
+          <Perfil />
+          <Feed perfilId={id} />
+        </main>
+      </div>
+    </div>
   )
 }
 
-export default Instagram
+export default PaginaPerfil

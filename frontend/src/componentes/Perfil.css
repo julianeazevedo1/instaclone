@@ -1,0 +1,451 @@
+.perfil-main {
+    min-width: 0;
+    padding: 1.75rem 1.75rem 3rem;
+    background: #fcfafb;
+}
+
+.perfil-card {
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+    border: 1px solid #f0e5e8;
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 14px 38px rgba(84, 55, 66, 0.07);
+}
+
+.perfil-capa {
+    position: relative;
+    height: 160px;
+    overflow: hidden;
+    background:
+        linear-gradient(120deg, #e2e5e8, #f1f3f5);
+}
+
+.perfil-capa::before,
+.perfil-capa::after {
+    position: absolute;
+    z-index: 2;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 50%;
+    content: "";
+    pointer-events: none;
+}
+
+.perfil-capa::before {
+    top: -150px;
+    right: 10%;
+    width: 340px;
+    height: 340px;
+}
+
+.perfil-capa::after {
+    top: -105px;
+    right: 17%;
+    width: 250px;
+    height: 250px;
+}
+
+.perfil-capa.vazia::before,
+.perfil-capa.vazia::after {
+    border-color: rgba(105, 115, 124, 0.13);
+}
+
+.perfil-capa.vazia .perfil-capa-sombra {
+    display: none;
+}
+
+.perfil-capa-placeholder {
+    position: absolute;
+    z-index: 3;
+    top: 28%;
+    left: 50%;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: #64707a;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+.perfil-capa-placeholder i {
+    font-size: 1.15rem;
+}
+
+.perfil-capa.vazia .perfil-capa-selo {
+    color: #7d8790;
+}
+
+.perfil-capa-imagem,
+.perfil-capa-sombra {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.perfil-capa-imagem {
+    z-index: 0;
+    object-fit: cover;
+}
+
+.perfil-capa-sombra {
+    z-index: 1;
+    background: linear-gradient(90deg, rgba(35, 20, 27, 0.2), rgba(35, 20, 27, 0.34));
+    pointer-events: none;
+}
+
+.perfil-capa-selo {
+    position: absolute;
+    z-index: 3;
+    top: 1.25rem;
+    right: 1.5rem;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+}
+
+.perfil-capa-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+.perfil-capa-input:focus-visible + .perfil-capa-botao {
+    outline: 3px solid #fff;
+    outline-offset: 3px;
+}
+
+.perfil-capa-botao {
+    position: absolute;
+    z-index: 3;
+    right: 1.25rem;
+    bottom: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    max-width: calc(100% - 2rem);
+    min-height: 40px;
+    padding: 0.6rem 0.95rem;
+    border: 1px solid rgba(255, 255, 255, 0.34);
+    border-radius: 999px;
+    background: rgba(49, 31, 38, 0.68);
+    backdrop-filter: blur(12px);
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 650;
+    transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.perfil-capa-botao:hover {
+    transform: translateY(-1px);
+    background: rgba(49, 31, 38, 0.86);
+}
+
+.perfil-capa.vazia .perfil-capa-botao {
+    border-color: #66717a;
+    background: #66717a;
+}
+
+.perfil-capa.vazia .perfil-capa-botao:hover {
+    background: #515c65;
+}
+
+.perfil-capa-botao.enviando {
+    cursor: progress;
+}
+
+.perfil-capa-erro {
+    margin: 0;
+    padding: 0.7rem 1.5rem;
+    background: #fff4f4;
+    color: #9c3d4d;
+    font-size: 0.82rem;
+}
+
+.perfil-corpo {
+    padding: 0 2rem 1.5rem;
+}
+
+.perfil-identidade {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.1rem;
+    margin-top: -3.8rem;
+}
+
+.perfil-avatar {
+    width: 140px;
+    height: 140px;
+    flex: 0 0 auto;
+    border: 6px solid #fff;
+    border-radius: 50%;
+    background: #f7e9ed;
+    box-shadow: 0 8px 22px rgba(53, 34, 41, 0.18);
+    object-fit: cover;
+}
+
+.perfil-titulos {
+    min-width: 0;
+    padding-top: 4.9rem;
+}
+
+.perfil-titulos h1 {
+    margin: 0;
+    color: #382a30;
+    font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+    font-weight: 750;
+    letter-spacing: -0.045em;
+    line-height: 1.15;
+}
+
+.perfil-usuario {
+    margin: 0.3rem 0 0;
+    color: #927d85;
+    font-size: 0.92rem;
+}
+
+.perfil-acoes {
+    display: flex;
+    gap: 0.65rem;
+    margin-left: auto;
+    padding-top: 5.1rem;
+}
+
+.perfil-botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 42px;
+    padding: 0.65rem 0.95rem;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    font-size: 0.84rem;
+    font-weight: 650;
+    text-decoration: none;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+    white-space: nowrap;
+}
+
+.perfil-botao:hover {
+    transform: translateY(-1px);
+}
+
+.perfil-botao-secundario {
+    border-color: #eadde1;
+    background: #fff;
+    color: #674a55;
+}
+
+.perfil-botao-secundario:hover {
+    border-color: #d7bbc4;
+    background: #fcf6f8;
+    color: #674a55;
+}
+
+.perfil-botao-principal {
+    background: #80515d;
+    color: #fff;
+}
+
+.perfil-botao-principal:hover {
+    background: #704653;
+    color: #fff;
+}
+
+.perfil-descricao {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 1rem;
+    margin: 0.65rem 0 0 158px;
+    color: #5f5056;
+    font-size: 0.9rem;
+}
+
+.perfil-descricao p {
+    margin: 0;
+}
+
+.perfil-localidade {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #927d85;
+    font-size: 0.82rem;
+}
+
+.perfil-estatisticas {
+    display: flex;
+    align-items: center;
+    margin: 1.35rem 0 0 158px;
+    padding: 1rem 0 0;
+    border-top: 1px solid #f1e8eb;
+    list-style: none;
+}
+
+.perfil-estatisticas li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding: 0 1.35rem;
+    border-right: 1px solid #f1e8eb;
+    color: #8d7a81;
+    font-size: 0.8rem;
+}
+
+.perfil-estatisticas li:first-child {
+    padding-left: 0;
+}
+
+.perfil-estatisticas li:last-child {
+    border-right: 0;
+}
+
+.perfil-estatisticas strong {
+    color: #47353d;
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+@media (max-width: 991.98px) {
+    .perfil-main {
+        padding: 1.25rem 1rem 2.5rem;
+    }
+
+    .perfil-corpo {
+        padding-right: 1.5rem;
+        padding-left: 1.5rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .perfil-main {
+        padding: 0.9rem 0.75rem 2rem;
+    }
+
+    .perfil-card {
+        margin-bottom: 1rem;
+        border-radius: 18px;
+    }
+
+    .perfil-capa {
+        height: 112px;
+    }
+
+    .perfil-capa-placeholder {
+        top: 0.75rem;
+        font-size: 0.74rem;
+    }
+
+    .perfil-capa-placeholder i {
+        font-size: 0.95rem;
+    }
+
+    .perfil-capa-selo {
+        top: 0.9rem;
+        right: 1rem;
+        font-size: 0.58rem;
+    }
+
+    .perfil-capa-botao {
+        right: 0.75rem;
+        bottom: 0.65rem;
+        min-height: 36px;
+        gap: 0.4rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.72rem;
+    }
+
+    .perfil-corpo {
+        padding: 0 1rem 1.15rem;
+    }
+
+    .perfil-identidade {
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        margin-top: -3.15rem;
+        text-align: center;
+    }
+
+    .perfil-avatar {
+        width: 112px;
+        height: 112px;
+        border-width: 5px;
+    }
+
+    .perfil-titulos {
+        padding-top: 0.65rem;
+    }
+
+    .perfil-titulos h1 {
+        font-size: 1.5rem;
+    }
+
+    .perfil-usuario {
+        margin-top: 0.2rem;
+        font-size: 0.84rem;
+    }
+
+    .perfil-acoes {
+        width: 100%;
+        margin: 1rem 0 0;
+        padding: 0;
+    }
+
+    .perfil-botao {
+        flex: 1 1 0;
+        min-height: 40px;
+        gap: 0.4rem;
+        padding: 0.55rem 0.5rem;
+        font-size: 0.78rem;
+    }
+
+    .perfil-descricao {
+        justify-content: center;
+        margin: 1rem 0 0;
+        text-align: center;
+    }
+
+    .perfil-estatisticas {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin: 1.1rem 0 0;
+        padding-top: 0.85rem;
+    }
+
+    .perfil-estatisticas li {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
+        padding: 0 0.25rem;
+        border-right: 1px solid #f1e8eb;
+        font-size: 0.72rem;
+        text-align: center;
+    }
+
+    .perfil-estatisticas li:first-child {
+        padding-left: 0.25rem;
+    }
+
+    .perfil-estatisticas li:last-child {
+        padding-right: 0.25rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .perfil-botao {
+        transition: none;
+    }
+}

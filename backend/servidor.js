@@ -1,314 +1,378 @@
-const express = require("express")
-const path = require("path")
-const fs = require("fs")
-const cors = require("cors")
+import express from 'express'
+import cors from 'cors'
+import bcrypt from 'bcryptjs'
+import crypto from 'node:crypto'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import multer from 'multer'
+import banco from './banco.js'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const diretorioUploads = path.join(__dirname, 'uploads')
+const extensoesImagem = new Map([
+    ['image/jpeg', '.jpg'],
+    ['image/png', '.png'],
+    ['image/webp', '.webp'],
+])
 const app = express()
+
+fs.mkdirSync(diretorioUploads, { recursive: true })
+
+const upload = multer({
+    storage: multer.diskStorage({
+        destination: (_req, _file, callback) => callback(null, diretorioUploads),
+        filename: (_req, file, callback) => {
+            callback(null, `${crypto.randomUUID()}${extensoesImagem.get(file.mimetype)}`)
+        },
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req, file, callback) => {
+        if (!extensoesImagem.has(file.mimetype)) {
+            const erro = new Error('Envie uma imagem JPEG, PNG ou WEBP')
+            erro.status = 400
+            return callback(erro)
+        }
+
+        callback(null, true)
+    },
+})
+
+function responderErroUpload(erroUpload, res, next) {
+    if (!erroUpload) return false
+
+    if (erroUpload instanceof multer.MulterError) {
+        const status = erroUpload.code === 'LIMIT_FILE_SIZE' ? 413 : 400
+        res.status(status).json({ mensagem: 'Não foi possível enviar a imagem' })
+        return true
+    }
+
+    if (erroUpload.status === 400) {
+        res.status(400).json({ mensagem: erroUpload.message })
+        return true
+    }
+
+    next(erroUpload)
+    return true
+}
 
 app.use(cors())
 app.use(express.json())
+app.use('/uploads', express.static(diretorioUploads))
 
-//rota
-//get perfil -> retorna nome, bio, posts, seguidores, seguindo
+function urlImagem(req, imagem) {
+    if (!imagem) return ''
+    if (/^https?:\/\//i.test(imagem)) return imagem
 
-const ARQUIVO_PERFIS = path.join(__dirname, "perfis.json")
-
-let perfis = [
-    {
-        id: 1,
-        usuario: "juliane",
-        nome: "Juliane Azevedo",
-        fotoPerfil:"https://placehold.co/100",
-        bio: "Fullstack Dev",
-        localidade: "Fortaleza, Brasil",
-        posts: 20,
-        seguidores: 345,
-        seguindo: 27
-        
-    },
-    {
-        id: 2,
-        usuario: "ana",
-        nome: "Ana Silva",
-        fotoPerfil:"https://img.magnific.com/fotos-premium/uma-mulher-de-negocios-elegante-e-confiante-a-sorrir_589812-528.jpg?semt=ais_hybrid&w=740&q=80",
-        bio: "UX/UI Designer",
-        localidade: "Fortaleza, Brasil",
-        posts: 20,
-        seguidores: 120,
-        seguindo: 80,
-    },
-
-    {
-        id: 3,
-        usuario: "joao",
-        nome: "João Pereira",
-        fotoPerfil:"https://images.pexels.com/photos/31772575/pexels-photo-31772575.jpeg",
-        bio: "Product Owner",
-        localidade: "Fortaleza, Brasil",
-        posts: 30,
-        seguidores: 120,
-        seguindo: 80,
-    },
-
-    {
-        id: 4,
-        usuario: "carlos",
-        nome: "Carlos Santos",
-        fotoPerfil:"https://images.pexels.com/photos/7681106/pexels-photo-7681106.jpeg",
-        bio: "Product Manager",
-        localidade: "Fortaleza, Brasil",
-        posts: 50,
-        seguidores: 120,
-        seguindo: 80,
-    }
-]
-
-function salvarPerfis() {
-    fs.writeFileSync(ARQUIVO_PERFIS, JSON.stringify(perfis, null, 2), "utf8")
+    return `${req.protocol}://${req.get('host')}/uploads/${encodeURIComponent(imagem)}`
 }
 
-try {
-    perfis = JSON.parse(fs.readFileSync(ARQUIVO_PERFIS, "utf8"))
-} catch (erro) {
-    if (erro.code === "ENOENT") {
-        salvarPerfis()
-    } else {
-        console.error("Erro ao carregar perfis:", erro)
-        process.exit(1)
+function buscarPerfil(id) {
+    return banco.prepare(`
+        SELECT
+            usuarios.id,
+            usuarios.usuario,
+            usuarios.nome,
+            usuarios.bio,
+            usuarios.localidade,
+            usuarios.foto,
+            usuarios.capa,
+            COUNT(DISTINCT posts.id) AS posts,
+(SELECT COUNT(*) FROM seguidores
+ WHERE seguido_id = usuarios.id) AS seguidores,
+(SELECT COUNT(*) FROM seguidores
+ WHERE seguidor_id = usuarios.id) AS seguindo
+        FROM usuarios
+        LEFT JOIN posts ON posts.usuario_id = usuarios.id
+        WHERE usuarios.id = ?
+        GROUP BY usuarios.id
+    `).get(id)
+}
+
+function respostaPerfil(req, perfil) {
+    return {
+        id: perfil.id,
+        usuario: perfil.usuario,
+        nome: perfil.nome,
+        bio: perfil.bio,
+        fotoPerfil: urlImagem(req, perfil.foto),
+        fotoCapa: urlImagem(req, perfil.capa),
+        localidade: perfil.localidade,
+        posts: perfil.posts,
+        seguidores: perfil.seguidores,
+        seguindo: perfil.seguindo,
     }
 }
 
-// app.get("/perfil", (req, res) => {
-//     res.json({
-//         nome: "Juliane Azevedo",
-//         bio: "Fullstack Developer",
-//         localidade: "Fortaleza, Brasil",
-//         posts: 20,
-//         seguidores: 345,
-//         seguindo: 20,
-//     })
-// })
-
-app.get("/perfis/:id", (req, res) => {
-    const id = Number(req.params.id)
-    const perfil = perfis.find((item) => item.id === id)
-
-    if (!perfil) {
-        return res.status(404).json({ mensagem: "Perfil não encontrado" })
+function respostaPost(req, post) {
+    return {
+        id: post.id,
+        usuarioId: post.usuarioId,
+        usuario: post.usuario,
+        avatar: urlImagem(req, post.avatar),
+        legenda: post.legenda,
+        imagem: `${req.protocol}://${req.get('host')}/uploads/${encodeURIComponent(post.imagem)}`,
     }
+}
 
-    res.json(perfil)
+app.get('/posts', (req, res) => {
+    const posts = banco.prepare(`
+        SELECT
+            posts.id,
+            posts.usuario_id AS usuarioId,
+            usuarios.usuario,
+            usuarios.foto AS avatar,
+            posts.imagem,
+            posts.legenda
+        FROM posts
+        JOIN usuarios ON usuarios.id = posts.usuario_id
+        ORDER BY posts.id DESC
+    `).all()
+
+    res.json(posts.map((post) => respostaPost(req, post)))
 })
 
-//login -> post
-const usuarios = [
-    { email: "juliane@gmail.com", senha: "12345", id: 1 },
-    { email: "ana@gmail.com", senha: "12345", id: 2 },
-    { email: "joao@gmail.com", senha: "12345", id: 3 },
-    { email: "carlos@gmail.com", senha: "12345", id: 4 },
-]
+app.get('/perfis/:id', (req, res) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id < 1) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
 
-app.post("/login", (req, res) => {
-    const { email, senha } = req.body
+    const perfil = buscarPerfil(id)
+    if (!perfil) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
 
-    const usuario = usuarios.find(
-        (item) => item.email === email && item.senha === senha
-    )
+    res.json(respostaPerfil(req, perfil))
+})
 
-    if (!usuario) {
-        return res.status(401).json({
-            mensagem: "E-mail ou senha incorretos",
+app.post('/perfis/:id/capa', (req, res, next) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id < 1 || !banco.prepare('SELECT id FROM usuarios WHERE id = ?').get(id)) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+
+    upload.single('foto')(req, res, (erroUpload) => {
+        if (responderErroUpload(erroUpload, res, next)) return
+        if (!req.file) {
+            return res.status(400).json({ mensagem: 'Escolha uma foto de capa' })
+        }
+
+        try {
+            banco.prepare('UPDATE usuarios SET capa = ? WHERE id = ?').run(req.file.filename, id)
+            return res.json({ fotoCapa: urlImagem(req, req.file.filename) })
+        } catch (erroBanco) {
+            fs.rmSync(req.file.path, { force: true })
+            return next(erroBanco)
+        }
+    })
+})
+
+app.post('/perfis/:id/foto', (req, res, next) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id < 1 || !banco.prepare('SELECT id FROM usuarios WHERE id = ?').get(id)) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+
+    upload.single('foto')(req, res, (erroUpload) => {
+        if (responderErroUpload(erroUpload, res, next)) return
+        if (!req.file) {
+            return res.status(400).json({ mensagem: 'Escolha uma foto de perfil' })
+        }
+
+        try {
+            banco.prepare('UPDATE usuarios SET foto = ? WHERE id = ?').run(req.file.filename, id)
+            return res.json({ fotoPerfil: urlImagem(req, req.file.filename) })
+        } catch (erroBanco) {
+            fs.rmSync(req.file.path, { force: true })
+            return next(erroBanco)
+        }
+    })
+})
+
+app.get('/perfis/:id/posts', (req, res) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id < 1 || !banco.prepare('SELECT id FROM usuarios WHERE id = ?').get(id)) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+
+    const posts = banco.prepare(`
+        SELECT
+            posts.id,
+            posts.usuario_id AS usuarioId,
+            usuarios.usuario,
+            usuarios.foto AS avatar,
+            posts.imagem,
+            posts.legenda
+        FROM posts
+        JOIN usuarios ON usuarios.id = posts.usuario_id
+        WHERE posts.usuario_id = ?
+        ORDER BY posts.id DESC
+    `).all(id)
+
+    res.json(posts.map((post) => respostaPost(req, post)))
+})
+
+app.post('/perfis/:id/posts', (req, res, next) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id < 1 || !banco.prepare('SELECT id FROM usuarios WHERE id = ?').get(id)) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+
+    upload.single('foto')(req, res, (erroUpload) => {
+        if (responderErroUpload(erroUpload, res, next)) return
+
+        if (!req.file) {
+            return res.status(400).json({ mensagem: 'Escolha uma foto para publicar' })
+        }
+
+        const legenda = typeof req.body.legenda === 'string' ? req.body.legenda.trim() : ''
+        if (legenda.length > 2000) {
+            fs.rmSync(req.file.path, { force: true })
+            return res.status(400).json({ mensagem: 'A legenda deve ter no máximo 2000 caracteres' })
+        }
+
+        try {
+            const resultado = banco.prepare(
+                'INSERT INTO posts (usuario_id, imagem, legenda) VALUES (?, ?, ?)'
+            ).run(id, req.file.filename, legenda)
+            const post = banco.prepare(`
+                SELECT
+                    posts.id,
+                    posts.usuario_id AS usuarioId,
+                    usuarios.usuario,
+                    usuarios.foto AS avatar,
+                    posts.imagem,
+                    posts.legenda
+                FROM posts
+                JOIN usuarios ON usuarios.id = posts.usuario_id
+                WHERE posts.id = ?
+            `).get(Number(resultado.lastInsertRowid))
+
+            return res.status(201).json(respostaPost(req, post))
+        } catch (erroBanco) {
+            fs.rmSync(req.file.path, { force: true })
+            return next(erroBanco)
+        }
+    })
+})
+
+app.post('/cadastro', (req, res, next) => {
+    const { nome, usuario, email, senha } = req.body ?? {}
+
+    if (
+        typeof nome !== 'string'
+        || typeof usuario !== 'string'
+        || typeof email !== 'string'
+        || typeof senha !== 'string'
+    ) {
+        return res.status(400).json({ mensagem: 'Preencha todos os campos do cadastro.' })
+    }
+
+    const nomeNormalizado = nome.trim()
+    const usuarioNormalizado = usuario.trim().toLowerCase()
+    const emailNormalizado = email.trim().toLowerCase()
+
+    if (nomeNormalizado.length < 2 || nomeNormalizado.length > 80) {
+        return res.status(400).json({ mensagem: 'O nome deve ter entre 2 e 80 caracteres.' })
+    }
+
+    if (!/^[a-z0-9._]{3,30}$/.test(usuarioNormalizado)) {
+        return res.status(400).json({
+            mensagem: 'O usuário deve ter de 3 a 30 caracteres: letras, números, ponto ou sublinhado.',
         })
     }
 
-    return res.json({
-        mensagem: "Login realizado com sucesso",
-        id: usuario.id,
-    })
-})
-
-
-app.patch("/perfis/:id", (req, res) => {
-    const encontrado = perfis.find(
-        (perfil) => perfil.id == req.params.id
-    )
-
-    if (!encontrado) {
-        return res.status(404).send("Perfil não encontrado!")
+    if (
+        emailNormalizado.length > 254
+        || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalizado)
+    ) {
+        return res.status(400).json({ mensagem: 'Informe um email válido.' })
     }
 
-    const novoPerfil = {}
-
-    if (req.query.nome !== undefined) {
-        novoPerfil.nome = req.query.nome
+    if (senha.length < 8 || Buffer.byteLength(senha, 'utf8') > 72) {
+        return res.status(400).json({
+            mensagem: 'A senha deve ter no mínimo 8 caracteres e no máximo 72 bytes.',
+        })
     }
 
-    if (req.query.bio !== undefined) {
-        novoPerfil.bio = req.query.bio
-    }
+    const usuarioExistente = banco.prepare(
+        'SELECT id FROM usuarios WHERE lower(usuario) = ? OR lower(email) = ?'
+    ).get(usuarioNormalizado, emailNormalizado)
 
-    if (req.query.localidade !== undefined) {
-        novoPerfil.localidade = req.query.localidade
+    if (usuarioExistente) {
+        return res.status(409).json({ mensagem: 'Esse usuário ou email já está cadastrado.' })
     }
-
-    if (Object.keys(novoPerfil).length === 0) {
-        return res.status(400).send("Envie nome, bio ou localidade na query")
-    }
-
-    Object.assign(encontrado, novoPerfil)
 
     try {
-        salvarPerfis()
-    } catch (erro) {
-        console.error("Erro ao salvar perfis:", erro)
-        return res.status(500).send("Não foi possível salvar o perfil")
+        const senhaHash = bcrypt.hashSync(senha, 10)
+        const resultado = banco.prepare(`
+            INSERT INTO usuarios (usuario, senha, nome, email)
+            VALUES (?, ?, ?, ?)
+        `).run(usuarioNormalizado, senhaHash, nomeNormalizado, emailNormalizado)
+
+        return res.status(201).json({
+            mensagem: 'Cadastro realizado com sucesso.',
+            id: Number(resultado.lastInsertRowid),
+        })
+    } catch (erroCadastro) {
+        if (String(erroCadastro.message).includes('UNIQUE constraint failed')) {
+            return res.status(409).json({ mensagem: 'Esse usuário ou email já está cadastrado.' })
+        }
+
+        return next(erroCadastro)
+    }
+})
+
+app.post('/login', (req, res) => {
+    const { usuario, senha } = req.body ?? {}
+    if (typeof usuario !== 'string' || typeof senha !== 'string') {
+        return res.status(400).json({ mensagem: 'Informe usuário e senha' })
     }
 
-    res.json(encontrado)
-})
-//----------------------------------------------------------------------------------------
+    const conta = banco
+        .prepare('SELECT id, senha FROM usuarios WHERE usuario = ?')
+        .get(usuario)
 
-const ARQUIVO = "produtos.json"
+    if (!conta || !bcrypt.compareSync(senha, conta.senha)) {
+        return res.status(401).json({ mensagem: 'Usuário ou senha incorretos' })
+    }
 
-let produtos = [
-    { id: 1, nome: "Mouse", preco: 120, desc: "Mouse caro dms" },
-    { id: 2, nome: "Teclado", preco: 20, desc: "Presta não" },
-    { id: 3, nome: "Fone de ouvido", preco: 100, desc: "TWS Headphone frush frush" },
-    { id: 4, nome: "Mousepad", preco: 12, desc: "Bem finin" },
-    { id: 5, nome: "Tela Arzopa", preco: 600, desc: "Full HD" },
-]
-
-function salvar() {
-    const dadosjson = JSON.stringify(produtos, null, 2)
-    fs.writeFile(ARQUIVO, dadosjson, "utf8", (err) => {
-        if (err) {
-            console.error("Erro ao salvar o arquivo:", err)
-        } else {
-            console.log("Arquivo salvo!")
-        }
+    res.json({
+        mensagem: 'Login realizado com sucesso',
+        id: conta.id,
     })
-}
-
-function ler() {
-    if (fs.existsSync(ARQUIVO)) {
-        try {
-            const dados = fs.readFileSync(ARQUIVO, "utf8")
-            produtos = JSON.parse(dados)
-        } catch (err) {
-            console.error("Erro ao ler o arquivo, usando lista padrão:", err)
-        }
-    }
-}
-
-// Lê o arquivo uma única vez ao iniciar
-ler()
-
-app.get("/sobre", (req, res) => {
-    const caminho = path.join(__dirname, "curriculo.html")
-    res.sendFile(caminho)
 })
 
-app.get("/produtos", (req, res) => {
-    res.json(produtos)
+app.patch('/perfis/:id', (req, res) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id < 1) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+
+    const campos = ['nome', 'bio', 'localidade']
+    const atualizacoes = campos.filter((campo) => req.query[campo] !== undefined)
+    if (atualizacoes.length === 0) {
+        return res.status(400).json({
+            mensagem: 'Envie nome, bio ou localidade na query',
+        })
+    }
+
+    const valores = atualizacoes.map((campo) => String(req.query[campo]))
+    const definicoes = atualizacoes.map((campo) => `${campo} = ?`).join(', ')
+    banco.prepare(`UPDATE usuarios SET ${definicoes} WHERE id = ?`).run(...valores, id)
+
+    const perfil = buscarPerfil(id)
+    if (!perfil) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+
+    res.json(respostaPerfil(req, perfil))
 })
 
-app.get("/produtos/:id", (req, res) => {
-    const encontrado = produtos.find(
-        (produto) => produto.id == req.params.id
-    )
+const PORTA = 3000
 
-    if (encontrado) {
-        res.json(encontrado)
-    } else {
-        res.status(404).send("Não encontrado")
-    }
+app.listen(PORTA, () => {
+    console.log(`Servidor iniciado em http://localhost:${PORTA}`)
 })
 
-app.post("/produtos", (req, res) => {
-    const body = req.body || {}
-
-    const precoValido = body.preco !== undefined && body.preco !== "" && !isNaN(Number(body.preco))
-
-    if (body.nome && precoValido && body.desc) {
-        const novoId = produtos.length
-            ? Math.max(...produtos.map((p) => p.id)) + 1
-            : 1
-
-        const novoProduto = {
-            id: novoId,
-            nome: body.nome,
-            preco: Number(body.preco),
-            desc: body.desc,
-        }
-
-        produtos.push(novoProduto)
-        salvar()
-        res.status(201).json(novoProduto)
-    } else {
-        res.status(400).send("Digite todos os campos (nome, preco e desc)")
-    }
-})
-
-app.delete("/produtos/:id", (req, res) => {
-    const existe = produtos.find(
-        (produto) => produto.id == req.params.id
-    )
-
-    if (existe) {
-        produtos = produtos.filter(
-            (produto) => produto.id != req.params.id
-        )
-
-        salvar()
-        res.send("Apaguei!")
-    } else {
-        res.status(404).send("Não achei!")
-    }
-})
-
-app.patch("/produtos/:id", (req, res) => {
-    const encontrado = produtos.find(
-        (produto) => produto.id == req.params.id
-    )
-
-    if (!encontrado) {
-        return res.status(404).send("Não encontrei!")
-    }
-
-    const novoproduto = {}
-
-    if (req.query.nome) {
-        novoproduto.nome = req.query.nome
-    }
-
-    if (req.query.preco !== undefined) {
-        const preco = Number(req.query.preco)
-        if (isNaN(preco)) {
-            return res.status(400).send("Preço inválido")
-        }
-        novoproduto.preco = preco
-    }
-
-    if (req.query.desc) {
-        novoproduto.desc = req.query.desc
-    }
-
-    if (Object.keys(novoproduto).length === 0) {
-        return res.status(400).send("Envie nome, preco ou desc na query")
-    }
-
-    Object.assign(encontrado, novoproduto)
-
-    salvar()
-    res.json(encontrado)
-})
-
-app.listen(3000, () => {
-    console.log("Servidor iniciado em http://localhost:3000")
-})
-
-
-//login - post
-//feed - get
-//perfil - get, bio e nome/ enviar foto post
-//configuração - patch, get

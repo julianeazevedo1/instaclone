@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './Login.css'
 
@@ -16,7 +16,7 @@ function Login() {
   const [erro, setErro] = useState('')
 
 
-  //envia email e senha ao backend 
+  // Envia usuário e senha ao backend
 
   async function entrar(event) {
     event.preventDefault()
@@ -30,7 +30,7 @@ function Login() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: formulario.get('email'),
+          usuario: formulario.get('usuario'),
           senha: formulario.get('senha'),
         }),
       })
@@ -60,10 +60,11 @@ function Login() {
 
         <form onSubmit={entrar} className="espaco-entre-email-e-senha d-flex flex-column">
           <input
-            type="email"
+            type="text"
             className="form-control"
-            name="email"
-            placeholder="Email"
+            name="usuario"
+            placeholder="Nome de usuário"
+            autoComplete="username"
             required
           />
           <input
@@ -90,6 +91,9 @@ function Login() {
             <span>Log in com Facebook</span>
           </a>
           <a  className="d-flex align-items-center justify-content-center" href="#">Esqueceu a senha?</a>
+          <p className="text-center small mt-3 mb-0">
+            Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
+          </p>
         </form>
       </div>
     </div>
