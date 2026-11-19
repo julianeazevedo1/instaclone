@@ -1,10 +1,20 @@
+.jelly-feed-page {
+  background: transparent;
+}
+
+.jelly-feed-main {
+  min-width: 0;
+  padding: 2rem clamp(1rem, 3vw, 2.5rem);
+}
+
 .stories-section {
   margin-bottom: 1.25rem;
   overflow: hidden;
-  border: 1px solid #eee2e5;
-  border-radius: 1rem;
-  background: #fff;
-  box-shadow: 0 5px 18px rgba(90, 53, 63, 0.06);
+  border: 1px solid rgba(145, 121, 197, 0.18);
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 9px 26px rgba(104, 82, 155, 0.07), inset 0 1px 0 #fff;
+  backdrop-filter: blur(14px);
 }
 
 .stories-track {
@@ -14,7 +24,7 @@
   padding: 1rem 1.1rem 0.85rem;
   scroll-snap-type: x mandatory;
   scrollbar-width: thin;
-  scrollbar-color: #d7bec4 transparent;
+  scrollbar-color: #c8b7ed transparent;
 }
 
 .story-item {
@@ -23,13 +33,12 @@
   flex-direction: column;
   align-items: center;
   gap: 0.35rem;
-  color: #4b3b40;
+  color: #4f4668;
   scroll-snap-align: start;
-  text-decoration: none;
 }
 
-.story-item:hover {
-  color: #8b5361;
+.story-item:hover .story-name {
+  color: #7657c7;
 }
 
 .story-ring {
@@ -37,13 +46,29 @@
   width: 68px;
   height: 68px;
   padding: 3px;
+  border: 0;
   border-radius: 50%;
-  background: conic-gradient(from 220deg, #f3a05c, #e44782, #8b45a4, #e44782, #f3a05c);
-  transition: transform 160ms ease;
+  background: conic-gradient(from 220deg, #8b6ce2, #ed86bd, #80d5d2, #d68be8, #8b6ce2);
+  cursor: pointer;
+  transition: background 180ms ease, transform 180ms ease;
+}
+
+.story-ring-vistos {
+  background: linear-gradient(145deg, #c8c3d1, #e1dde8);
+}
+
+.story-ring-tem-novas {
+  box-shadow: 0 3px 12px rgba(149, 108, 214, 0.18);
 }
 
 .story-item:hover .story-ring {
   transform: scale(1.06);
+}
+
+.story-ring:focus-visible,
+.story-name:focus-visible {
+  outline: 3px solid #a68ae8;
+  outline-offset: 3px;
 }
 
 .story-avatar {
@@ -56,16 +81,131 @@
 }
 
 .story-name {
+  padding: 0;
   width: 100%;
   overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
   font-size: 0.75rem;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.jelly-post-card {
+  overflow: hidden;
+  border: 1px solid rgba(145, 121, 197, 0.18);
+  border-radius: 1.35rem;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 28px rgba(104, 82, 155, 0.08), inset 0 1px 0 #fff;
+}
+
+.jelly-post-card .card-body {
+  color: #4b425f;
+}
+
+.jelly-post-avatar-button,
+.jelly-post-author-button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.jelly-post-avatar-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.jelly-post-avatar-button:focus-visible,
+.jelly-post-author-button:focus-visible {
+  outline: 3px solid #a68ae8;
+  outline-offset: 3px;
+}
+
+.jelly-post-author-button {
+  color: inherit;
+  font-weight: 700;
+}
+
+.jelly-post-author-button:hover {
+  color: #7657c7;
+}
+
+.jelly-post-card .card-img-top {
+  background: linear-gradient(135deg, #ede7fb, #faeaf3);
+}
+
+.jelly-delete-post-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid rgba(178, 76, 100, 0.18);
+  border-radius: 999px;
+  background: #fff7f8;
+  color: #a13d52;
+  font-size: 0.78rem;
+}
+
+.jelly-delete-post-button:hover:not(:disabled) {
+  border-color: rgba(178, 76, 100, 0.32);
+  background: #ffeff2;
+  color: #963b5e;
+}
+
+.jelly-delete-post-button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.jelly-icon-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(145, 121, 197, 0.12);
+  border-radius: 50%;
+  background: #f8f5ff;
+  color: #756a91;
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.jelly-icon-button:hover {
+  transform: translateY(-1px);
+  background: #efe8ff;
+  color: #7657c7;
+}
+
+.jelly-icon-button.curtido {
+  background: #fff0f8;
+  color: #df609f;
+}
+
+.jelly-icon-button.curtido:hover {
+  background: #ffe4f1;
+  color: #cf4b8c;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .story-ring {
     transition: none;
+  }
+
+  .jelly-icon-button {
+    transition: none;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .jelly-feed-main {
+    padding: 1rem 0.8rem;
+  }
+
+  .jelly-post-card,
+  .stories-section {
+    border-radius: 1rem;
   }
 }

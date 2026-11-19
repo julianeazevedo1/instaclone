@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import logo from '../assets/instaclone-logo.svg'
+import API_URL from '../api'
 import './Cadastro.css'
 
-const URL_API = 'http://localhost:3000/cadastro'
+const URL_API = `${API_URL}/cadastro`
 
 function Cadastro() {
   const navigate = useNavigate()
@@ -42,6 +43,8 @@ function Cadastro() {
         throw new Error(dados.mensagem || 'Não foi possível criar a conta.')
       }
 
+      sessionStorage.setItem('instaclone_usuario_id', String(dados.id))
+      sessionStorage.setItem('instaclone_token', dados.token)
       navigate(`/perfil/${dados.id}`)
     } catch (erroCadastro) {
       setErro(erroCadastro.message || 'Não foi possível falar com o servidor.')

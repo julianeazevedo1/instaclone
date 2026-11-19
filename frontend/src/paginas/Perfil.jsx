@@ -10,7 +10,7 @@ function PaginaPerfil() {
     <div className="container-fluid min-vh-100 px-0" >
       <div className="row g-0">
         <Navbar />
-        <main className="col-12 col-lg-9 col-xl-10 perfil-main">
+        <main className="col-12 perfil-main">
           <Perfil />
           <Feed perfilId={id} />
         </main>

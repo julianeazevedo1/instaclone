@@ -1,20 +1,25 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import Navbar from '../componentes/Navbar'
+import API_URL from '../api'
 import './Configuracao.css'
 
-const URL_API = 'http://localhost:3000/perfis'
+const URL_API = `${API_URL}/perfis`
 const TAMANHO_MAXIMO = 5 * 1024 * 1024
 const TIPOS_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp']
 
 function Configuracao() {
   const { id } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const ehDono = sessionStorage.getItem('instaclone_usuario_id') === String(id)
   const [perfil, setPerfil] = useState(null)
   const [erro, setErro] = useState('')
   const [mensagem, setMensagem] = useState('')
   const [erroFoto, setErroFoto] = useState('')
   const [mensagemFoto, setMensagemFoto] = useState('')
   const [enviandoFoto, setEnviandoFoto] = useState(false)
+  const [removendoFoto, setRemovendoFoto] = useState(false)
   const [salvando, setSalvando] = useState(false)
 
   useEffect(() => {
@@ -76,13 +81,54 @@ function Configuracao() {
         throw new Error(resultado.mensagem || 'Não foi possível atualizar a foto de perfil.')
       }
 
-      setPerfil((atual) => ({ ...atual, fotoPerfil: resultado.fotoPerfil }))
+      setPerfil((atual) => ({
+        ...atual,
+        fotoPerfil: resultado.fotoPerfil,
+        temFotoPerfil: true,
+      }))
       setMensagemFoto('Foto de perfil atualizada.')
     } catch (erroEnvio) {
       setErroFoto(erroEnvio.message)
     } finally {
       setEnviandoFoto(false)
       campoFoto.value = ''
+    }
+  }
+
+  async function excluirFotoPerfil() {
+    if (!ehDono) {
+      navigate('/login', { state: { from: location.pathname } })
+      return
+    }
+
+    if (!perfil.temFotoPerfil || !window.confirm('Excluir sua foto de perfil? Esta ação não pode ser desfeita.')) {
+      return
+    }
+
+    setErroFoto('')
+    setMensagemFoto('')
+    setRemovendoFoto(true)
+
+    try {
+      const resposta = await fetch(`${URL_API}/${id}/foto`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('instaclone_token')}` },
+      })
+      const resultado = await resposta.json()
+      if (!resposta.ok) {
+        throw new Error(resultado.mensagem || 'Não foi possível excluir a foto de perfil.')
+      }
+
+      setPerfil((atual) => ({
+        ...atual,
+        fotoPerfil: resultado.fotoPerfil,
+        temFotoPerfil: resultado.temFotoPerfil,
+      }))
+      setMensagemFoto('Foto de perfil excluída.')
+    } catch (erroExclusao) {
+      setErroFoto(erroExclusao.message)
+    } finally {
+      setRemovendoFoto(false)
     }
   }
 
@@ -118,7 +164,7 @@ function Configuracao() {
     <div className="container-fluid min-vh-100 px-0">
       <div className="row g-0">
         <Navbar />
-        <main className="col-12 col-lg-9 col-xl-10 configuracao-main">
+        <main className="col-12 configuracao-main">
           {!perfil ? (
             <div className="configuracao-estado" role={erro ? 'alert' : 'status'}>
               {erro || 'Carregando configurações...'}
@@ -156,16 +202,30 @@ function Configuracao() {
                     className="configuracao-input-arquivo"
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
-                    disabled={enviandoFoto}
+                    disabled={enviandoFoto || removendoFoto}
                     onChange={alterarFoto}
                   />
-                  <label
-                    className={`configuracao-botao-foto${enviandoFoto ? ' enviando' : ''}`}
-                    htmlFor="foto-perfil"
-                  >
-                    <i className={`bi ${enviandoFoto ? 'bi-arrow-repeat' : 'bi-camera'}`} aria-hidden="true" />
-                    {enviandoFoto ? 'Enviando...' : 'Escolher foto'}
-                  </label>
+                  <div className="configuracao-acoes-foto">
+                    <label
+                      className={`configuracao-botao-foto${enviandoFoto ? ' enviando' : ''}`}
+                      htmlFor="foto-perfil"
+                    >
+                      <i className={`bi ${enviandoFoto ? 'bi-arrow-repeat' : 'bi-camera'}`} aria-hidden="true" />
+                      {enviandoFoto ? 'Enviando...' : 'Escolher foto'}
+                    </label>
+                    {perfil.temFotoPerfil && (
+                      <button
+                        className="configuracao-botao-remover-foto"
+                        type="button"
+                        disabled={enviandoFoto || removendoFoto}
+                        title={ehDono ? 'Excluir foto de perfil' : 'Entre nesta conta para excluir a foto'}
+                        onClick={excluirFotoPerfil}
+                      >
+                        <i className={`bi ${removendoFoto ? 'bi-arrow-repeat' : 'bi-trash3'}`} aria-hidden="true" />
+                        {removendoFoto ? 'Excluindo...' : 'Excluir foto'}
+                      </button>
+                    )}
+                  </div>
                   <p className="configuracao-ajuda">JPEG, PNG ou WEBP · Até 5 MB</p>
 
                   {erroFoto && <p className="configuracao-mensagem erro" role="alert">{erroFoto}</p>}

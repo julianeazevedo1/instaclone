@@ -30,6 +30,13 @@ banco.exec(`
   PRIMARY KEY (seguidor_id, seguido_id),
   CHECK (seguidor_id <> seguido_id)
 );
+
+  CREATE TABLE IF NOT EXISTS story_views (
+    visualizador_id INTEGER NOT NULL REFERENCES usuarios(id),
+    post_id INTEGER NOT NULL REFERENCES posts(id),
+    visualizado_em TEXT NOT NULL,
+    PRIMARY KEY (visualizador_id, post_id)
+  );
 `)
 
 
@@ -43,6 +50,11 @@ if (!colunasUsuarios.some((coluna) => coluna.name === 'email')) {
 }
 if (!colunasUsuarios.some((coluna) => coluna.name === 'capa')) {
   banco.exec("ALTER TABLE usuarios ADD COLUMN capa TEXT NOT NULL DEFAULT ''")
+}
+
+const colunasPosts = banco.prepare('PRAGMA table_info(posts)').all()
+if (!colunasPosts.some((coluna) => coluna.name === 'publicado_em')) {
+  banco.exec('ALTER TABLE posts ADD COLUMN publicado_em TEXT')
 }
 
 banco.exec(`

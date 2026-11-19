@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import API_URL from '../api'
 import './Perfil.css'
 
-const URL_API = 'http://localhost:3000/perfis'
 const TAMANHO_MAXIMO_CAPA = 5 * 1024 * 1024
 const TIPOS_CAPA_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp']
 
 function Perfil() {
   const { id } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [usuarioAutenticadoId, setUsuarioAutenticadoId] = useState(null)
   const [perfil, setPerfil] = useState(null)
   const [erro, setErro] = useState('')
+  const [erroSessao, setErroSessao] = useState('')
   const [erroCapa, setErroCapa] = useState('')
   const [enviandoCapa, setEnviandoCapa] = useState(false)
+  const [excluindoCapa, setExcluindoCapa] = useState(false)
+  const ehDono = usuarioAutenticadoId !== null && usuarioAutenticadoId === Number(id)
 
   useEffect(() => {
     async function carregarPerfil() {
@@ -20,7 +26,7 @@ function Perfil() {
           throw new Error('ID do perfil não informado')
         }
 
-        const resposta = await fetch(`${URL_API}/${id}`)
+        const resposta = await fetch(`${API_URL}/perfis/${id}`)
         if (!resposta.ok) {
           throw new Error('Perfil não encontrado')
         }
@@ -33,6 +39,39 @@ function Perfil() {
 
     carregarPerfil()
   }, [id])
+
+  useEffect(() => {
+    let ativo = true
+    const token = sessionStorage.getItem('instaclone_token')
+
+    async function carregarSessao() {
+      try {
+        const resposta = await fetch(`${API_URL}/sessao`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const dados = await resposta.json()
+
+        if (!resposta.ok) {
+          if (resposta.status === 401) {
+            sessionStorage.removeItem('instaclone_usuario_id')
+            sessionStorage.removeItem('instaclone_token')
+            return
+          }
+          throw new Error(dados.mensagem || 'Não foi possível confirmar sua sessão.')
+        }
+
+        if (ativo) setUsuarioAutenticadoId(Number(dados.id))
+      } catch (erroCarregamento) {
+        if (ativo) setErroSessao(erroCarregamento.message || 'Não foi possível confirmar sua sessão.')
+      }
+    }
+
+    if (token) carregarSessao()
+
+    return () => {
+      ativo = false
+    }
+  }, [])
 
   async function enviarFotoCapa(event) {
     const campoFoto = event.currentTarget
@@ -58,7 +97,7 @@ function Perfil() {
     setEnviandoCapa(true)
 
     try {
-      const resposta = await fetch(`${URL_API}/${id}/capa`, {
+      const resposta = await fetch(`${API_URL}/perfis/${id}/capa`, {
         method: 'POST',
         body: dados,
       })
@@ -68,7 +107,7 @@ function Perfil() {
         throw new Error(resultado.mensagem || 'Não foi possível atualizar a foto de capa.')
       }
 
-      setPerfil((atual) => ({ ...atual, fotoCapa: resultado.fotoCapa }))
+      setPerfil((atual) => ({ ...atual, fotoCapa: resultado.fotoCapa, temFotoCapa: true }))
     } catch (erroEnvio) {
       setErroCapa(erroEnvio.message)
     } finally {
@@ -77,11 +116,51 @@ function Perfil() {
     }
   }
 
+  async function excluirFotoCapa() {
+    if (!ehDono) {
+      navigate('/login', { state: { from: location.pathname } })
+      return
+    }
+
+    if (!perfil.temFotoCapa || !window.confirm('Excluir a foto de capa? Esta ação não pode ser desfeita.')) {
+      return
+    }
+
+    setErroCapa('')
+    setExcluindoCapa(true)
+
+    try {
+      const resposta = await fetch(`${API_URL}/perfis/${id}/capa`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${sessionStorage.getItem('instaclone_token')}` },
+      })
+      const resultado = await resposta.json()
+      if (!resposta.ok) {
+        throw new Error(resultado.mensagem || 'Não foi possível excluir a foto de capa.')
+      }
+
+      setPerfil((atual) => ({
+        ...atual,
+        fotoCapa: resultado.fotoCapa,
+        temFotoCapa: resultado.temFotoCapa,
+      }))
+    } catch (erroExclusao) {
+      setErroCapa(erroExclusao.message)
+    } finally {
+      setExcluindoCapa(false)
+    }
+  }
+
   if (erro) return <div className="alert alert-danger" role="alert">{erro}</div>
   if (!perfil) return <p className="text-secondary" role="status">Carregando perfil...</p>
 
   return (
-    <section className="perfil-card" aria-label={`Perfil de ${perfil.nome}`} aria-busy={enviandoCapa}>
+    <section
+      className="perfil-card"
+      aria-label={`${ehDono ? 'Seu perfil' : 'Perfil'} de ${perfil.nome}`}
+      aria-busy={enviandoCapa || excluindoCapa}
+    >
+      {erroSessao && <p className="perfil-sessao-erro" role="status">{erroSessao}</p>}
       <div className={`perfil-capa${perfil.fotoCapa ? ' com-foto' : ' vazia'}`}>
         {perfil.fotoCapa && <img className="perfil-capa-imagem" src={perfil.fotoCapa} alt="" />}
         <span className="perfil-capa-sombra" aria-hidden="true" />
@@ -93,27 +172,45 @@ function Perfil() {
             <span>Área para foto de capa</span>
           </span>
         )}
-        <input
-          id="foto-capa"
-          className="perfil-capa-input"
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          disabled={enviandoCapa}
-          onChange={enviarFotoCapa}
-        />
-        <label
-          className={`perfil-capa-botao${enviandoCapa ? ' enviando' : ''}`}
-          htmlFor="foto-capa"
-        >
-          <i className={`bi ${enviandoCapa ? 'bi-arrow-repeat' : 'bi-camera'}`} aria-hidden="true" />
-          <span>
-            {enviandoCapa
-              ? 'Enviando...'
-              : perfil.fotoCapa
-                ? 'Alterar foto de capa'
-                : 'Adicionar foto de capa'}
-          </span>
-        </label>
+        {ehDono && (
+          <>
+            <input
+              id="foto-capa"
+              className="perfil-capa-input"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={enviandoCapa}
+              onChange={enviarFotoCapa}
+            />
+            <div className="perfil-capa-acoes">
+              {perfil.temFotoCapa && (
+                <button
+                  className="perfil-capa-excluir"
+                  type="button"
+                  disabled={enviandoCapa || excluindoCapa}
+                  title="Excluir foto de capa"
+                  onClick={excluirFotoCapa}
+                >
+                  <i className={`bi ${excluindoCapa ? 'bi-arrow-repeat' : 'bi-trash3'}`} aria-hidden="true" />
+                  <span>{excluindoCapa ? 'Excluindo...' : 'Excluir capa'}</span>
+                </button>
+              )}
+              <label
+                className={`perfil-capa-botao${enviandoCapa ? ' enviando' : ''}`}
+                htmlFor="foto-capa"
+              >
+                <i className={`bi ${enviandoCapa ? 'bi-arrow-repeat' : 'bi-camera'}`} aria-hidden="true" />
+                <span>
+                  {enviandoCapa
+                    ? 'Enviando...'
+                    : perfil.fotoCapa
+                      ? 'Alterar foto de capa'
+                      : 'Adicionar foto de capa'}
+                </span>
+              </label>
+            </div>
+          </>
+        )}
       </div>
       {erroCapa && <p className="perfil-capa-erro" role="alert">{erroCapa}</p>}
 
@@ -126,20 +223,30 @@ function Perfil() {
           />
 
           <div className="perfil-titulos">
-            <h1>{perfil.nome}</h1>
+            <h1>
+              {perfil.nome}
+              {ehDono && (
+                <span className="perfil-selo-atual">
+                  <i className="bi bi-person-check-fill" aria-hidden="true" />
+                  Você
+                </span>
+              )}
+            </h1>
             <p className="perfil-usuario">@{perfil.usuario}</p>
           </div>
 
-          <div className="perfil-acoes">
-            <Link className="perfil-botao perfil-botao-secundario" to={`/configuracao/${id}`}>
-              <i className="bi bi-pencil" aria-hidden="true" />
-              <span>Editar perfil</span>
-            </Link>
-            <Link className="perfil-botao perfil-botao-principal" to={`/publicar/${id}`}>
-              <i className="bi bi-plus-lg" aria-hidden="true" />
-              <span>Publicar foto</span>
-            </Link>
-          </div>
+          {ehDono && (
+            <div className="perfil-acoes">
+              <Link className="perfil-botao perfil-botao-secundario" to={`/configuracao/${id}`}>
+                <i className="bi bi-pencil" aria-hidden="true" />
+                <span>Editar perfil</span>
+              </Link>
+              <Link className="perfil-botao perfil-botao-principal" to={`/publicar/${id}`}>
+                <i className="bi bi-plus-lg" aria-hidden="true" />
+                <span>Publicar foto</span>
+              </Link>
+            </div>
+          )}
         </div>
 
         {(perfil.bio || perfil.localidade) && (

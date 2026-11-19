@@ -43,7 +43,9 @@ const rotas = createBrowserRouter([
         path: "/publicar/:id",
         element: <PublicarFoto />,
     },
-]);
+], {
+    basename: import.meta.env.BASE_URL,
+});
 
 export default function Rotas() {
     return <RouterProvider router={rotas} />;

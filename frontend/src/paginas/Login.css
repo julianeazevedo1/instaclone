@@ -1,9 +1,35 @@
-.img-instagem {
-  display: block;
-  width: 300px;
-  height: auto;
-  margin: 0 auto;
+.jelly-login-page {
+  background:
+    radial-gradient(circle at 85% 12%, rgba(234, 178, 222, 0.2), transparent 28rem),
+    radial-gradient(circle at 10% 88%, rgba(165, 153, 241, 0.16), transparent 30rem);
+}
 
+.login-caixa {
+  width: min(100%, 440px);
+  min-height: 0;
+  padding: 2.5rem;
+  border: 1px solid var(--jelly-line) !important;
+  border-radius: 1.65rem;
+  background: var(--jelly-glass) !important;
+  box-shadow: var(--jelly-shadow), inset 0 1px 0 #fff;
+  backdrop-filter: blur(18px);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-bottom: 1.8rem;
+  color: var(--jelly-ink);
+  font-size: 1.75rem;
+  font-weight: 750;
+  letter-spacing: -0.05em;
+}
+
+.login-brand img {
+  width: 44px;
+  height: 44px;
 }
 
 .img-facebook {
@@ -13,45 +39,72 @@
   margin-right: 8px;
 }
 
-.login-caixa {
-  width: 500px;
-  min-height: 400px;
- padding: 40px 40px 20px;
-  border-color: #dbdbdb !important;
+.login-caixa .form-control {
+  min-height: 46px;
+  border-color: var(--jelly-line);
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.88);
 }
 
-
+.login-caixa .form-control:focus {
+  border-color: #b19be8;
+  box-shadow: 0 0 0 0.2rem rgba(132, 102, 223, 0.13);
+}
 
 .espaco-entre-email-e-senha {
-  gap: 8px;
+  gap: 0.75rem;
 }
 
+.login-for {
+  gap: 0.9rem;
+  margin: 0.35rem 0;
+  color: var(--jelly-muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+}
 
+.login-for::before,
+.login-for::after {
+  height: 1px;
+  flex: 1;
+  background: var(--jelly-line);
+  content: "";
+}
 
 .botao-login {
-  min-height: 33px;
-  margin-top: 8px;
-  padding: 4px 12px;
+  min-height: 42px;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
   border: 0;
-  border-radius: 8px;
-  background-color: #4cb5f9;
+  border-radius: 999px;
+  background: var(--jelly-gradient);
   color: #fff;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 0.92rem;
+  font-weight: 650;
+  box-shadow: 0 8px 18px rgba(132, 102, 223, 0.2);
 }
 
 .botao-login.btn:hover,
 .botao-login.btn:focus {
-  background-color: #379fe3;
+  background: linear-gradient(130deg, #7655ce, #d86fb4 60%, #e97caa);
+  color: #fff;
 }
 
-
-
-
+.facebook-login,
+.forgot-password {
+  color: #7058b4;
+  text-decoration: none;
+}
 
 .facebook-login:hover,
 .forgot-password:hover {
+  color: #5c429d;
   text-decoration: underline;
 }
 
-
+@media (max-width: 480px) {
+  .login-caixa {
+    padding: 2rem 1.35rem;
+    border-radius: 1.35rem;
+  }
+}

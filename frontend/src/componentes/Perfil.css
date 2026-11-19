@@ -1,53 +1,72 @@
 .perfil-main {
     min-width: 0;
-    padding: 1.75rem 1.75rem 3rem;
-    background: #fcfafb;
+    padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem;
+    background: transparent;
 }
 
 .perfil-card {
+    position: relative;
+    width: min(100%, 1120px);
     overflow: hidden;
-    margin-bottom: 1.5rem;
-    border: 1px solid #f0e5e8;
-    border-radius: 24px;
-    background: #fff;
-    box-shadow: 0 14px 38px rgba(84, 55, 66, 0.07);
+    margin: 0 auto 1.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.88);
+    border-radius: 30px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(250, 247, 255, 0.82));
+    box-shadow:
+        0 28px 75px rgba(83, 63, 135, 0.12),
+        0 5px 18px rgba(104, 82, 155, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(22px) saturate(145%);
+    animation: perfil-card-entrada 420ms ease both;
 }
 
 .perfil-capa {
     position: relative;
-    height: 160px;
+    height: clamp(180px, 23vw, 255px);
     overflow: hidden;
     background:
-        linear-gradient(120deg, #e2e5e8, #f1f3f5);
+        radial-gradient(ellipse at 82% 18%, rgba(255, 255, 255, 0.78), transparent 25%),
+        radial-gradient(ellipse at 16% 112%, rgba(128, 213, 210, 0.55), transparent 40%),
+        linear-gradient(118deg, #c9b8f1 0%, #edc3e1 52%, #f6d5e6 100%);
 }
 
 .perfil-capa::before,
 .perfil-capa::after {
     position: absolute;
     z-index: 2;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
     content: "";
     pointer-events: none;
+    transition: transform 500ms ease;
 }
 
 .perfil-capa::before {
-    top: -150px;
-    right: 10%;
-    width: 340px;
-    height: 340px;
+    top: -205px;
+    right: 9%;
+    width: 420px;
+    height: 420px;
 }
 
 .perfil-capa::after {
-    top: -105px;
-    right: 17%;
-    width: 250px;
-    height: 250px;
+    top: -145px;
+    right: 16%;
+    width: 300px;
+    height: 300px;
+}
+
+.perfil-card:hover .perfil-capa::before {
+    transform: translate(-8px, 6px);
+}
+
+.perfil-card:hover .perfil-capa::after {
+    transform: translate(6px, -4px);
 }
 
 .perfil-capa.vazia::before,
 .perfil-capa.vazia::after {
-    border-color: rgba(105, 115, 124, 0.13);
+    border-color: rgba(255, 255, 255, 0.48);
 }
 
 .perfil-capa.vazia .perfil-capa-sombra {
@@ -57,24 +76,37 @@
 .perfil-capa-placeholder {
     position: absolute;
     z-index: 3;
-    top: 28%;
+    top: 50%;
     left: 50%;
     display: inline-flex;
     align-items: center;
-    gap: 0.55rem;
-    color: #64707a;
-    font-size: 0.9rem;
-    font-weight: 600;
-    transform: translateX(-50%);
+    gap: 0.65rem;
+    padding: 0.75rem 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.68);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.42);
+    box-shadow: 0 8px 26px rgba(78, 57, 123, 0.08), inset 0 1px 0 #fff;
+    backdrop-filter: blur(14px);
+    color: #5d5077;
+    font-size: 0.88rem;
+    font-weight: 650;
+    transform: translate(-50%, -50%);
     white-space: nowrap;
 }
 
 .perfil-capa-placeholder i {
-    font-size: 1.15rem;
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.62);
+    color: #8065c5;
+    font-size: 1rem;
 }
 
 .perfil-capa.vazia .perfil-capa-selo {
-    color: #7d8790;
+    color: rgba(82, 64, 113, 0.72);
 }
 
 .perfil-capa-imagem,
@@ -92,7 +124,7 @@
 
 .perfil-capa-sombra {
     z-index: 1;
-    background: linear-gradient(90deg, rgba(35, 20, 27, 0.2), rgba(35, 20, 27, 0.34));
+    background: linear-gradient(180deg, rgba(43, 26, 58, 0.02) 28%, rgba(43, 26, 58, 0.38));
     pointer-events: none;
 }
 
@@ -100,11 +132,16 @@
     position: absolute;
     z-index: 3;
     top: 1.25rem;
-    right: 1.5rem;
-    color: rgba(255, 255, 255, 0.82);
-    font-size: 0.65rem;
+    left: 1.5rem;
+    padding: 0.48rem 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    border-radius: 999px;
+    background: rgba(45, 33, 65, 0.2);
+    backdrop-filter: blur(12px);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.62rem;
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.16em;
 }
 
 .perfil-capa-input {
@@ -117,46 +154,78 @@
     clip-path: inset(50%);
 }
 
-.perfil-capa-input:focus-visible + .perfil-capa-botao {
+.perfil-capa-input:focus-visible ~ .perfil-capa-acoes .perfil-capa-botao {
     outline: 3px solid #fff;
     outline-offset: 3px;
 }
 
-.perfil-capa-botao {
+.perfil-capa-acoes {
     position: absolute;
     z-index: 3;
     right: 1.25rem;
     bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    max-width: calc(100% - 2rem);
+}
+
+.perfil-capa-botao,
+.perfil-capa-excluir {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    max-width: calc(100% - 2rem);
-    min-height: 40px;
-    padding: 0.6rem 0.95rem;
-    border: 1px solid rgba(255, 255, 255, 0.34);
+    min-height: 42px;
+    padding: 0.65rem 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.56);
     border-radius: 999px;
-    background: rgba(49, 31, 38, 0.68);
-    backdrop-filter: blur(12px);
+    box-shadow: 0 7px 18px rgba(44, 30, 65, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(14px);
     color: #fff;
     cursor: pointer;
     font-size: 0.8rem;
     font-weight: 650;
-    transition: background-color 160ms ease, transform 160ms ease;
+    text-decoration: none;
+    transition: background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+    white-space: nowrap;
+}
+
+.perfil-capa-botao {
+    z-index: 3;
+    background: rgba(64, 45, 84, 0.66);
 }
 
 .perfil-capa-botao:hover {
-    transform: translateY(-1px);
-    background: rgba(49, 31, 38, 0.86);
+    transform: translateY(-2px);
+    background: rgba(64, 45, 84, 0.84);
+    box-shadow: 0 10px 24px rgba(44, 30, 65, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+.perfil-capa-excluir {
+    background: rgba(135, 57, 86, 0.7);
+}
+
+.perfil-capa-excluir:hover:not(:disabled) {
+    transform: translateY(-2px);
+    background: rgba(135, 57, 86, 0.88);
+}
+
+.perfil-capa-excluir:disabled {
+    cursor: progress;
+    opacity: 0.75;
 }
 
 .perfil-capa.vazia .perfil-capa-botao {
-    border-color: #66717a;
-    background: #66717a;
+    border-color: rgba(255, 255, 255, 0.72);
+    background: linear-gradient(130deg, #8063d2, #c66fb3);
+    box-shadow: 0 8px 20px rgba(111, 77, 172, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .perfil-capa.vazia .perfil-capa-botao:hover {
-    background: #515c65;
+    background: linear-gradient(130deg, #7255c5, #b95fa4);
 }
 
 .perfil-capa-botao.enviando {
@@ -165,60 +234,113 @@
 
 .perfil-capa-erro {
     margin: 0;
-    padding: 0.7rem 1.5rem;
-    background: #fff4f4;
-    color: #9c3d4d;
+    padding: 0.8rem 1.5rem;
+    background: linear-gradient(90deg, #fff4f7, #fff9fb);
+    color: #a33b55;
     font-size: 0.82rem;
 }
 
+.perfil-sessao-erro {
+    margin: 0;
+    padding: 0.65rem 1.5rem;
+    background: rgba(255, 248, 250, 0.9);
+    color: #8e3f56;
+    font-size: 0.78rem;
+}
+
 .perfil-corpo {
-    padding: 0 2rem 1.5rem;
+    padding: 0 clamp(1.25rem, 4vw, 2.75rem) 2rem;
 }
 
 .perfil-identidade {
     position: relative;
     display: flex;
-    align-items: flex-start;
-    gap: 1.1rem;
-    margin-top: -3.8rem;
+    align-items: flex-end;
+    gap: 1.25rem;
+    margin-top: -4.5rem;
 }
 
 .perfil-avatar {
-    width: 140px;
-    height: 140px;
+    width: 152px;
+    height: 152px;
     flex: 0 0 auto;
-    border: 6px solid #fff;
+    border: 7px solid rgba(255, 255, 255, 0.98);
     border-radius: 50%;
-    background: #f7e9ed;
-    box-shadow: 0 8px 22px rgba(53, 34, 41, 0.18);
+    background: linear-gradient(135deg, #efe8ff, #fbeaf4);
+    box-shadow:
+        0 14px 32px rgba(66, 47, 105, 0.22),
+        0 0 0 1px rgba(145, 121, 197, 0.12),
+        inset 0 1px 0 #fff;
     object-fit: cover;
+    transition: box-shadow 220ms ease, transform 220ms ease;
+}
+
+.perfil-avatar:hover {
+    transform: translateY(-3px);
+    box-shadow:
+        0 18px 38px rgba(66, 47, 105, 0.25),
+        0 0 0 1px rgba(145, 121, 197, 0.14),
+        inset 0 1px 0 #fff;
 }
 
 .perfil-titulos {
     min-width: 0;
-    padding-top: 4.9rem;
+    padding-bottom: 0.55rem;
 }
 
 .perfil-titulos h1 {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.45rem 0.65rem;
     margin: 0;
-    color: #382a30;
-    font-size: clamp(1.45rem, 2.4vw, 1.9rem);
-    font-weight: 750;
+    color: var(--jelly-ink);
+    font-size: clamp(1.55rem, 2.8vw, 2.15rem);
+    font-weight: 780;
     letter-spacing: -0.045em;
-    line-height: 1.15;
+    line-height: 1.12;
+}
+
+.perfil-selo-atual {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.32rem;
+    padding: 0.38rem 0.65rem;
+    border: 1px solid rgba(126, 99, 197, 0.2);
+    border-radius: 999px;
+    background: linear-gradient(120deg, rgba(184, 159, 247, 0.2), rgba(246, 173, 214, 0.2));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    color: #654bb0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1;
+    white-space: nowrap;
 }
 
 .perfil-usuario {
-    margin: 0.3rem 0 0;
-    color: #927d85;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.42rem 0 0;
+    color: var(--jelly-muted);
     font-size: 0.92rem;
+}
+
+.perfil-usuario::before {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--jelly-purple), var(--jelly-pink));
+    content: "";
 }
 
 .perfil-acoes {
     display: flex;
-    gap: 0.65rem;
+    flex-wrap: wrap;
+    gap: 0.6rem;
     margin-left: auto;
-    padding-top: 5.1rem;
+    padding-bottom: 0.55rem;
 }
 
 .perfil-botao {
@@ -226,106 +348,151 @@
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    min-height: 42px;
-    padding: 0.65rem 0.95rem;
-    border: 1px solid transparent;
-    border-radius: 12px;
+    min-height: 44px;
+    padding: 0.7rem 1.1rem;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 999px;
+    box-shadow: 0 7px 18px rgba(104, 82, 155, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.9);
     font-size: 0.84rem;
     font-weight: 650;
     text-decoration: none;
-    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+    transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
     white-space: nowrap;
 }
 
 .perfil-botao:hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    box-shadow: 0 11px 24px rgba(104, 82, 155, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .perfil-botao-secundario {
-    border-color: #eadde1;
-    background: #fff;
-    color: #674a55;
+    border-color: rgba(144, 121, 194, 0.18);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(246, 241, 255, 0.88));
+    color: #66518f;
 }
 
 .perfil-botao-secundario:hover {
-    border-color: #d7bbc4;
-    background: #fcf6f8;
-    color: #674a55;
+    border-color: rgba(144, 121, 194, 0.34);
+    background: linear-gradient(145deg, #fff, #f2eaff);
+    color: #5f479f;
 }
 
 .perfil-botao-principal {
-    background: #80515d;
+    background: var(--jelly-gradient);
     color: #fff;
+    box-shadow: 0 9px 22px rgba(169, 105, 193, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.34);
 }
 
 .perfil-botao-principal:hover {
-    background: #704653;
+    background: linear-gradient(130deg, #7655ce, #d86fb4 60%, #e97caa);
+    box-shadow: 0 13px 28px rgba(169, 105, 193, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.42);
     color: #fff;
 }
 
 .perfil-descricao {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 0.55rem 1rem;
-    margin: 0.65rem 0 0 158px;
-    color: #5f5056;
+    align-items: flex-start;
+    gap: 0.7rem 1rem;
+    margin: 1.15rem 0 0 170px;
+    padding: 1rem 1.15rem;
+    border: 1px solid rgba(255, 255, 255, 0.92);
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(246, 241, 255, 0.58));
+    box-shadow: 0 8px 24px rgba(104, 82, 155, 0.06), inset 0 1px 0 #fff;
+    color: #5e5871;
     font-size: 0.9rem;
 }
 
 .perfil-descricao p {
+    flex: 1 1 100%;
     margin: 0;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
 }
 
 .perfil-localidade {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    color: #927d85;
+    gap: 0.42rem;
+    padding: 0.4rem 0.7rem;
+    border: 1px solid rgba(144, 121, 194, 0.13);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.74);
+    color: #75668f;
     font-size: 0.82rem;
 }
 
 .perfil-estatisticas {
     display: flex;
     align-items: center;
-    margin: 1.35rem 0 0 158px;
-    padding: 1rem 0 0;
-    border-top: 1px solid #f1e8eb;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    margin: 1rem 0 0 170px;
+    padding: 0;
     list-style: none;
 }
 
 .perfil-estatisticas li {
     display: flex;
     align-items: baseline;
-    gap: 0.4rem;
-    padding: 0 1.35rem;
-    border-right: 1px solid #f1e8eb;
-    color: #8d7a81;
+    gap: 0.45rem;
+    padding: 0.72rem 0.95rem;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(247, 243, 255, 0.66));
+    box-shadow: 0 6px 18px rgba(104, 82, 155, 0.06), inset 0 1px 0 #fff;
+    color: var(--jelly-muted);
     font-size: 0.8rem;
 }
 
-.perfil-estatisticas li:first-child {
-    padding-left: 0;
-}
-
-.perfil-estatisticas li:last-child {
-    border-right: 0;
-}
-
 .perfil-estatisticas strong {
-    color: #47353d;
-    font-size: 1rem;
-    font-weight: 750;
+    color: #51416f;
+    font-size: 1.05rem;
+    font-weight: 780;
 }
 
 @media (max-width: 991.98px) {
     .perfil-main {
-        padding: 1.25rem 1rem 2.5rem;
+        padding: 1.5rem 1rem 2.5rem;
     }
 
     .perfil-corpo {
-        padding-right: 1.5rem;
-        padding-left: 1.5rem;
+        padding-right: 1.75rem;
+        padding-left: 1.75rem;
+    }
+
+    .perfil-identidade {
+        gap: 1rem;
+        margin-top: -4rem;
+    }
+
+    .perfil-avatar {
+        width: 132px;
+        height: 132px;
+    }
+
+    .perfil-descricao,
+    .perfil-estatisticas {
+        margin-left: 148px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .perfil-identidade {
+        flex-wrap: wrap;
+    }
+
+    .perfil-acoes {
+        flex: 1 1 100%;
+        justify-content: flex-start;
+        margin-left: 148px;
+        padding: 0 0 0.3rem;
+    }
+
+    .perfil-descricao,
+    .perfil-estatisticas {
+        margin-left: 0;
     }
 }
 
@@ -335,62 +502,72 @@
     }
 
     .perfil-card {
-        margin-bottom: 1rem;
-        border-radius: 18px;
+        margin-bottom: 1.15rem;
+        border-radius: 23px;
     }
 
     .perfil-capa {
-        height: 112px;
+        height: 142px;
     }
 
     .perfil-capa-placeholder {
-        top: 0.75rem;
-        font-size: 0.74rem;
+        top: 45%;
+        gap: 0.45rem;
+        padding: 0.55rem 0.75rem;
+        font-size: 0.72rem;
     }
 
     .perfil-capa-placeholder i {
-        font-size: 0.95rem;
+        width: 26px;
+        height: 26px;
+        font-size: 0.88rem;
     }
 
     .perfil-capa-selo {
         top: 0.9rem;
-        right: 1rem;
+        left: 1rem;
         font-size: 0.58rem;
     }
 
-    .perfil-capa-botao {
-        right: 0.75rem;
-        bottom: 0.65rem;
-        min-height: 36px;
-        gap: 0.4rem;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.72rem;
+    .perfil-capa-acoes {
+        right: 0.6rem;
+        bottom: 0.6rem;
+        gap: 0.35rem;
+    }
+
+    .perfil-capa-botao,
+    .perfil-capa-excluir {
+        min-height: 34px;
+        gap: 0.35rem;
+        padding: 0.45rem 0.65rem;
+        font-size: 0.68rem;
     }
 
     .perfil-corpo {
-        padding: 0 1rem 1.15rem;
+        padding: 0 1rem 1.25rem;
     }
 
     .perfil-identidade {
         flex-direction: column;
         align-items: center;
         gap: 0;
-        margin-top: -3.15rem;
+        margin-top: -3.25rem;
         text-align: center;
     }
 
     .perfil-avatar {
-        width: 112px;
-        height: 112px;
-        border-width: 5px;
+        width: 118px;
+        height: 118px;
+        border-width: 6px;
     }
 
     .perfil-titulos {
-        padding-top: 0.65rem;
+        padding: 0.65rem 0 0;
     }
 
     .perfil-titulos h1 {
-        font-size: 1.5rem;
+        justify-content: center;
+        font-size: 1.55rem;
     }
 
     .perfil-usuario {
@@ -400,52 +577,77 @@
 
     .perfil-acoes {
         width: 100%;
+        flex-basis: auto;
+        justify-content: center;
         margin: 1rem 0 0;
         padding: 0;
     }
 
     .perfil-botao {
         flex: 1 1 0;
-        min-height: 40px;
+        min-height: 42px;
         gap: 0.4rem;
-        padding: 0.55rem 0.5rem;
+        padding: 0.6rem 0.45rem;
         font-size: 0.78rem;
     }
 
     .perfil-descricao {
         justify-content: center;
         margin: 1rem 0 0;
+        padding: 0.9rem;
+        border-radius: 17px;
         text-align: center;
+    }
+
+    .perfil-descricao p {
+        flex-basis: 100%;
     }
 
     .perfil-estatisticas {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        margin: 1.1rem 0 0;
-        padding-top: 0.85rem;
+        gap: 0.4rem;
+        margin: 0.8rem 0 0;
     }
 
     .perfil-estatisticas li {
         flex-direction: column;
         align-items: center;
-        gap: 0.1rem;
-        padding: 0 0.25rem;
-        border-right: 1px solid #f1e8eb;
+        justify-content: center;
+        gap: 0.15rem;
+        min-width: 0;
+        padding: 0.65rem 0.25rem;
+        border-radius: 13px;
         font-size: 0.72rem;
         text-align: center;
     }
 
-    .perfil-estatisticas li:first-child {
-        padding-left: 0.25rem;
-    }
-
-    .perfil-estatisticas li:last-child {
-        padding-right: 0.25rem;
+    .perfil-estatisticas strong {
+        font-size: 1rem;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .perfil-card,
+    .perfil-capa::before,
+    .perfil-capa::after,
+    .perfil-avatar,
+    .perfil-capa-botao,
+    .perfil-capa-excluir,
     .perfil-botao {
         transition: none;
+        animation: none;
+    }
+}
+
+@keyframes perfil-card-entrada {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

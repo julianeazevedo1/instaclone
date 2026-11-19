@@ -6,10 +6,13 @@
   "author": "Juliane Azevedo",
   "type": "module",
   "main": "servidor.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "consultas": "node --experimental-sqlite --disable-warning=ExperimentalWarning consultas.js",
     "seed": "node --experimental-sqlite --disable-warning=ExperimentalWarning seed.js",
-    "start": "node --watch servidor.js"
+    "start": "node servidor.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

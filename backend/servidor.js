@@ -16,6 +16,7 @@ const extensoesImagem = new Map([
     ['image/webp', '.webp'],
 ])
 const app = express()
+const sessoes = new Map()
 
 fs.mkdirSync(diretorioUploads, { recursive: true })
 
@@ -67,6 +68,34 @@ function urlImagem(req, imagem) {
     return `${req.protocol}://${req.get('host')}/uploads/${encodeURIComponent(imagem)}`
 }
 
+function removerArquivoUpload(imagem) {
+    const nomeUploadGerado = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(?:jpg|png|webp)|\d{13}\.(?:jpg|jpeg|png|webp|svg))$/i
+    if (typeof imagem !== 'string' || !nomeUploadGerado.test(imagem)) return
+
+    fs.rmSync(path.join(diretorioUploads, imagem), { force: true })
+}
+
+function emitirToken(usuarioId) {
+    const token = crypto.randomUUID()
+    sessoes.set(token, usuarioId)
+    return token
+}
+
+function usuarioDaSessao(req) {
+    const autorizacao = req.get('authorization') || ''
+    const token = autorizacao.startsWith('Bearer ') ? autorizacao.slice(7) : ''
+    return sessoes.get(token)
+}
+
+function exigirDono(req, res, usuarioId) {
+    if (usuarioDaSessao(req) !== usuarioId) {
+        res.status(401).json({ mensagem: 'Faça login nesta conta para excluir este conteúdo.' })
+        return false
+    }
+
+    return true
+}
+
 function buscarPerfil(id) {
     return banco.prepare(`
         SELECT
@@ -97,6 +126,8 @@ function respostaPerfil(req, perfil) {
         bio: perfil.bio,
         fotoPerfil: urlImagem(req, perfil.foto),
         fotoCapa: urlImagem(req, perfil.capa),
+        temFotoPerfil: Boolean(perfil.foto && perfil.foto !== 'sem-foto.svg'),
+        temFotoCapa: Boolean(perfil.capa),
         localidade: perfil.localidade,
         posts: perfil.posts,
         seguidores: perfil.seguidores,
@@ -109,27 +140,57 @@ function respostaPost(req, post) {
         id: post.id,
         usuarioId: post.usuarioId,
         usuario: post.usuario,
+        nome: post.nome || post.usuario,
         avatar: urlImagem(req, post.avatar),
         legenda: post.legenda,
+        publicadoEm: post.publicadoEm ?? null,
+        visualizado: Boolean(post.visualizado),
         imagem: `${req.protocol}://${req.get('host')}/uploads/${encodeURIComponent(post.imagem)}`,
     }
 }
 
 app.get('/posts', (req, res) => {
+    const visualizadorId = usuarioDaSessao(req) ?? 0
     const posts = banco.prepare(`
         SELECT
             posts.id,
             posts.usuario_id AS usuarioId,
             usuarios.usuario,
+            usuarios.nome,
             usuarios.foto AS avatar,
             posts.imagem,
-            posts.legenda
+            posts.legenda,
+            posts.publicado_em AS publicadoEm,
+            CASE WHEN story_views.post_id IS NULL THEN 0 ELSE 1 END AS visualizado
         FROM posts
         JOIN usuarios ON usuarios.id = posts.usuario_id
+        LEFT JOIN story_views
+            ON story_views.post_id = posts.id
+            AND story_views.visualizador_id = ?
         ORDER BY posts.id DESC
-    `).all()
+    `).all(visualizadorId)
 
     res.json(posts.map((post) => respostaPost(req, post)))
+})
+
+app.get('/sessao', (req, res) => {
+    const usuarioId = usuarioDaSessao(req)
+    if (!usuarioId) {
+        return res.status(401).json({ mensagem: 'Faça login para consultar sua conta.' })
+    }
+
+    const perfil = buscarPerfil(usuarioId)
+    if (!perfil) {
+        return res.status(401).json({ mensagem: 'A conta desta sessão não está disponível.' })
+    }
+
+    res.json({
+        id: perfil.id,
+        nome: perfil.nome,
+        usuario: perfil.usuario,
+        fotoPerfil: urlImagem(req, perfil.foto),
+        temFotoPerfil: Boolean(perfil.foto && perfil.foto !== 'sem-foto.svg'),
+    })
 })
 
 app.get('/perfis/:id', (req, res) => {
@@ -190,33 +251,153 @@ app.post('/perfis/:id/foto', (req, res, next) => {
     })
 })
 
+app.delete('/perfis/:id/foto', (req, res, next) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id < 1) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+    if (!exigirDono(req, res, id)) return
+
+    const perfil = banco.prepare('SELECT foto FROM usuarios WHERE id = ?').get(id)
+    if (!perfil) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+
+    try {
+        banco.prepare('UPDATE usuarios SET foto = ? WHERE id = ?').run('sem-foto.svg', id)
+        removerArquivoUpload(perfil.foto)
+        return res.json({
+            fotoPerfil: urlImagem(req, 'sem-foto.svg'),
+            temFotoPerfil: false,
+        })
+    } catch (erroRemocao) {
+        console.error('Erro ao excluir foto de perfil:', erroRemocao)
+        return res.status(500).json({ mensagem: 'Não foi possível concluir a exclusão da foto de perfil.' })
+    }
+})
+
+app.delete('/perfis/:id/capa', (req, res, next) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id < 1) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+    if (!exigirDono(req, res, id)) return
+
+    const perfil = banco.prepare('SELECT capa FROM usuarios WHERE id = ?').get(id)
+    if (!perfil) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+
+    try {
+        banco.prepare("UPDATE usuarios SET capa = '' WHERE id = ?").run(id)
+        removerArquivoUpload(perfil.capa)
+        return res.json({ fotoCapa: '', temFotoCapa: false })
+    } catch (erroRemocao) {
+        console.error('Erro ao excluir foto de capa:', erroRemocao)
+        return res.status(500).json({ mensagem: 'Não foi possível concluir a exclusão da foto de capa.' })
+    }
+})
+
 app.get('/perfis/:id/posts', (req, res) => {
     const id = Number(req.params.id)
     if (!Number.isInteger(id) || id < 1 || !banco.prepare('SELECT id FROM usuarios WHERE id = ?').get(id)) {
         return res.status(404).json({ mensagem: 'Perfil não encontrado' })
     }
 
+    const visualizadorId = usuarioDaSessao(req) ?? 0
     const posts = banco.prepare(`
         SELECT
             posts.id,
             posts.usuario_id AS usuarioId,
             usuarios.usuario,
+            usuarios.nome,
             usuarios.foto AS avatar,
             posts.imagem,
-            posts.legenda
+            posts.legenda,
+            posts.publicado_em AS publicadoEm,
+            CASE WHEN story_views.post_id IS NULL THEN 0 ELSE 1 END AS visualizado
         FROM posts
         JOIN usuarios ON usuarios.id = posts.usuario_id
+        LEFT JOIN story_views
+            ON story_views.post_id = posts.id
+            AND story_views.visualizador_id = ?
         WHERE posts.usuario_id = ?
         ORDER BY posts.id DESC
-    `).all(id)
+    `).all(visualizadorId, id)
 
     res.json(posts.map((post) => respostaPost(req, post)))
+})
+
+app.get('/perfis/:id/stories', (req, res) => {
+    const id = Number(req.params.id)
+    if (!Number.isInteger(id) || id < 1 || !banco.prepare('SELECT id FROM usuarios WHERE id = ?').get(id)) {
+        return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+
+    const visualizadorId = usuarioDaSessao(req) ?? 0
+    const stories = banco.prepare(`
+        SELECT
+            posts.id,
+            posts.usuario_id AS usuarioId,
+            usuarios.usuario,
+            usuarios.nome,
+            usuarios.foto AS avatar,
+            posts.imagem,
+            posts.legenda,
+            posts.publicado_em AS publicadoEm,
+            CASE WHEN story_views.post_id IS NULL THEN 0 ELSE 1 END AS visualizado
+        FROM posts
+        JOIN usuarios ON usuarios.id = posts.usuario_id
+        LEFT JOIN story_views
+            ON story_views.post_id = posts.id
+            AND story_views.visualizador_id = ?
+        WHERE posts.usuario_id = ?
+        ORDER BY posts.id ASC
+    `).all(visualizadorId, id)
+
+    res.json(stories.map((story) => respostaPost(req, story)))
+})
+
+app.post('/stories/:postId/visualizacao', (req, res) => {
+    const visualizadorId = usuarioDaSessao(req)
+    if (!visualizadorId) {
+        return res.status(401).json({ mensagem: 'Faça login para registrar Stories visualizados.' })
+    }
+
+    const postId = Number(req.params.postId)
+    if (!Number.isInteger(postId) || postId < 1) {
+        return res.status(404).json({ mensagem: 'Story não encontrado' })
+    }
+    if (!banco.prepare('SELECT id FROM posts WHERE id = ?').get(postId)) {
+        return res.status(404).json({ mensagem: 'Story não encontrado' })
+    }
+
+    try {
+        banco.prepare(`
+            INSERT INTO story_views (visualizador_id, post_id, visualizado_em)
+            VALUES (?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
+            ON CONFLICT (visualizador_id, post_id)
+            DO UPDATE SET visualizado_em = excluded.visualizado_em
+        `).run(visualizadorId, postId)
+
+        return res.json({ visualizado: true })
+    } catch (erroRegistro) {
+        console.error('Erro ao registrar Story visualizado:', erroRegistro)
+        return res.status(500).json({ mensagem: 'Não foi possível registrar a visualização do Story.' })
+    }
 })
 
 app.post('/perfis/:id/posts', (req, res, next) => {
     const id = Number(req.params.id)
     if (!Number.isInteger(id) || id < 1 || !banco.prepare('SELECT id FROM usuarios WHERE id = ?').get(id)) {
         return res.status(404).json({ mensagem: 'Perfil não encontrado' })
+    }
+    const usuarioId = usuarioDaSessao(req)
+    if (!usuarioId) {
+        return res.status(401).json({ mensagem: 'Faça login para publicar uma foto.' })
+    }
+    if (usuarioId !== id) {
+        return res.status(403).json({ mensagem: 'Você só pode publicar fotos no seu próprio perfil.' })
     }
 
     upload.single('foto')(req, res, (erroUpload) => {
@@ -234,16 +415,20 @@ app.post('/perfis/:id/posts', (req, res, next) => {
 
         try {
             const resultado = banco.prepare(
-                'INSERT INTO posts (usuario_id, imagem, legenda) VALUES (?, ?, ?)'
+                `INSERT INTO posts (usuario_id, imagem, legenda, publicado_em)
+                 VALUES (?, ?, ?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))`
             ).run(id, req.file.filename, legenda)
             const post = banco.prepare(`
                 SELECT
                     posts.id,
                     posts.usuario_id AS usuarioId,
                     usuarios.usuario,
+                    usuarios.nome,
                     usuarios.foto AS avatar,
                     posts.imagem,
-                    posts.legenda
+                    posts.legenda,
+                    posts.publicado_em AS publicadoEm,
+                    0 AS visualizado
                 FROM posts
                 JOIN usuarios ON usuarios.id = posts.usuario_id
                 WHERE posts.id = ?
@@ -255,6 +440,44 @@ app.post('/perfis/:id/posts', (req, res, next) => {
             return next(erroBanco)
         }
     })
+})
+
+app.delete('/perfis/:id/posts/:postId', (req, res, next) => {
+    const id = Number(req.params.id)
+    const postId = Number(req.params.postId)
+    if (
+        !Number.isInteger(id)
+        || id < 1
+        || !Number.isInteger(postId)
+        || postId < 1
+    ) {
+        return res.status(404).json({ mensagem: 'Publicação não encontrada' })
+    }
+    if (!exigirDono(req, res, id)) return
+
+    const post = banco.prepare(
+        'SELECT imagem FROM posts WHERE id = ? AND usuario_id = ?'
+    ).get(postId, id)
+    if (!post) {
+        return res.status(404).json({ mensagem: 'Publicação não encontrada' })
+    }
+
+    try {
+        banco.exec('BEGIN')
+        try {
+            banco.prepare('DELETE FROM story_views WHERE post_id = ?').run(postId)
+            banco.prepare('DELETE FROM posts WHERE id = ? AND usuario_id = ?').run(postId, id)
+            banco.exec('COMMIT')
+        } catch (erroTransacao) {
+            banco.exec('ROLLBACK')
+            throw erroTransacao
+        }
+        removerArquivoUpload(post.imagem)
+        return res.json({ mensagem: 'Publicação excluída com sucesso' })
+    } catch (erroRemocao) {
+        console.error('Erro ao excluir publicação:', erroRemocao)
+        return res.status(500).json({ mensagem: 'Não foi possível concluir a exclusão da publicação.' })
+    }
 })
 
 app.post('/cadastro', (req, res, next) => {
@@ -314,6 +537,7 @@ app.post('/cadastro', (req, res, next) => {
         return res.status(201).json({
             mensagem: 'Cadastro realizado com sucesso.',
             id: Number(resultado.lastInsertRowid),
+            token: emitirToken(Number(resultado.lastInsertRowid)),
         })
     } catch (erroCadastro) {
         if (String(erroCadastro.message).includes('UNIQUE constraint failed')) {
@@ -327,20 +551,21 @@ app.post('/cadastro', (req, res, next) => {
 app.post('/login', (req, res) => {
     const { usuario, senha } = req.body ?? {}
     if (typeof usuario !== 'string' || typeof senha !== 'string') {
-        return res.status(400).json({ mensagem: 'Informe usuário e senha' })
+        return res.status(400).json({ mensagem: 'Informe e-mail ou usuário e senha' })
     }
 
     const conta = banco
-        .prepare('SELECT id, senha FROM usuarios WHERE usuario = ?')
-        .get(usuario)
+        .prepare('SELECT id, senha FROM usuarios WHERE lower(usuario) = ? OR lower(email) = ?')
+        .get(usuario.trim().toLowerCase(), usuario.trim().toLowerCase())
 
     if (!conta || !bcrypt.compareSync(senha, conta.senha)) {
-        return res.status(401).json({ mensagem: 'Usuário ou senha incorretos' })
+        return res.status(401).json({ mensagem: 'E-mail, usuário ou senha incorretos' })
     }
 
     res.json({
         mensagem: 'Login realizado com sucesso',
         id: conta.id,
+        token: emitirToken(conta.id),
     })
 })
 
@@ -370,7 +595,7 @@ app.patch('/perfis/:id', (req, res) => {
     res.json(respostaPerfil(req, perfil))
 })
 
-const PORTA = 3000
+const PORTA = process.env.PORT || 3000
 
 app.listen(PORTA, () => {
     console.log(`Servidor iniciado em http://localhost:${PORTA}`)

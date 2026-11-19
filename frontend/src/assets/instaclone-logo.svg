@@ -1,18 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
     <linearGradient id="brand" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#80515d"/>
-      <stop offset="1" stop-color="#d89ba7"/>
+      <stop stop-color="#8060d7"/>
+      <stop offset="1" stop-color="#ee8fbd"/>
     </linearGradient>
     <linearGradient id="lens" x1="25" y1="25" x2="40" y2="41" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#f8dfe3"/>
-      <stop offset="1" stop-color="#e7aeb8"/>
+      <stop stop-color="#f6e1ff"/>
+      <stop offset="1" stop-color="#9de7e2"/>
     </linearGradient>
   </defs>
   <rect x="3" y="3" width="58" height="58" rx="18" fill="url(#brand)"/>
   <path d="M19 21h7l3-4h8l3 4h5a5 5 0 0 1 5 5v17a5 5 0 0 1-5 5H19a5 5 0 0 1-5-5V26a5 5 0 0 1 5-5Z" fill="#fff" fill-opacity=".96"/>
-  <circle cx="32" cy="34" r="10" fill="#80515d"/>
+  <circle cx="32" cy="34" r="10" fill="#8060d7"/>
   <circle cx="32" cy="34" r="7" fill="url(#lens)"/>
-  <circle cx="47" cy="27" r="2" fill="#d89ba7"/>
+  <circle cx="47" cy="27" r="2" fill="#ee8fbd"/>
   <path d="M44 12v5m-2.5-2.5h5" stroke="#fff" stroke-linecap="round" stroke-width="1.5" stroke-opacity=".9"/>
 </svg>

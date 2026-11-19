@@ -50,6 +50,7 @@ const exemplos = [
 
 // Apaga os dados antigos (as tabelas continuam existindo)
 banco.exec('DELETE FROM seguidores')
+banco.exec('DELETE FROM story_views')
 banco.exec('DELETE FROM posts')
 banco.exec('DELETE FROM usuarios')
 banco.exec('DELETE FROM sqlite_sequence') // faz os ids voltarem a começar do 1

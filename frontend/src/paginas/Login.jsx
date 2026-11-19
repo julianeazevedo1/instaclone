@@ -1,16 +1,19 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import logo from '../assets/instaclone-logo.svg'
+import API_URL from '../api'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './Login.css'
 
 
-const URL_API = 'http://localhost:3000/login'
+const URL_API = `${API_URL}/login`
 
 
 function Login() {
 
   //---js
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [carregando, setCarregando] = useState(false)
   const [erro, setErro] = useState('')
@@ -42,7 +45,9 @@ function Login() {
         return
       }
 
-      navigate(`/perfil/${dados.id}`)
+      sessionStorage.setItem('instaclone_usuario_id', String(dados.id))
+      sessionStorage.setItem('instaclone_token', dados.token)
+      navigate(location.state?.from || `/perfil/${dados.id}`, { replace: true })
     } catch {
       setErro('Não consegui falar com o servidor. Ele está ligado?')
     } finally {
@@ -53,9 +58,12 @@ function Login() {
   //---html
   return (
 
-    <div className=" d-flex justify-content-center align-items-center min-vh-100 px-3">
+    <main className="jelly-login-page d-flex justify-content-center align-items-center min-vh-100 px-3 py-5">
       <div className="login-caixa border bg-white">
-        <img src="https://thumbs.dreamstime.com/b/modelo-do-logotipo-instagram-ilustrativo-em-fundo-branco-%C3%ADcone-de-logotipos-%C3%ADcones-definir-m%C3%ADdias-sociais-banner-plano-vetores-210441931.jpg" className="img-fluid img-instagem" alt="Logo do Instagram" />
+        <div className="login-brand">
+          <img src={logo} alt="" aria-hidden="true" />
+          <span>Instaclone</span>
+        </div>
       
 
         <form onSubmit={entrar} className="espaco-entre-email-e-senha d-flex flex-column">
@@ -63,7 +71,7 @@ function Login() {
             type="text"
             className="form-control"
             name="usuario"
-            placeholder="Nome de usuário"
+            placeholder="Nome de usuário ou e-mail"
             autoComplete="username"
             required
           />
@@ -81,22 +89,20 @@ function Login() {
           </button>
 
           <div className="login-for d-flex align-items-center justify-content-center">
-          
-            <span>OR</span>
-            
+            <span>OU</span>
           </div>
 
-          <a  href="https://www.facebook.com/?locale=pt_BR" className="d-flex align-items-center justify-content-center">
+          <a href="https://www.facebook.com/?locale=pt_BR" className="facebook-login d-flex align-items-center justify-content-center">
             <img src="https://static.vecteezy.com/system/resources/thumbnails/018/930/698/small/facebook-logo-facebook-icon-transparent-free-png.png" className="img-fluid img-facebook" alt="Logo do Facebook"/>
             <span>Log in com Facebook</span>
           </a>
-          <a  className="d-flex align-items-center justify-content-center" href="#">Esqueceu a senha?</a>
+          <a className="forgot-password d-flex align-items-center justify-content-center" href="#">Esqueceu a senha?</a>
           <p className="text-center small mt-3 mb-0">
             Não tem uma conta? <Link to="/cadastro">Cadastre-se</Link>
           </p>
         </form>
       </div>
-    </div>
+    </main>
   )
 }
 
