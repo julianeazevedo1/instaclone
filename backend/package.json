@@ -1,0 +1,23 @@
+{
+  "name": "projeto-final-backend",
+  "version": "1.0.0",
+  "description": "Backend do meu projeto de  conclusão digital college",
+  "license": "ISC",
+  "author": "Juliane Azevedo",
+  "type": "module",
+  "main": "servidor.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "consultas": "node --experimental-sqlite --disable-warning=ExperimentalWarning consultas.js",
+    "seed": "node --experimental-sqlite --disable-warning=ExperimentalWarning seed.js",
+    "start": "node servidor.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "multer": "^2.5.0"
+  }
+}
